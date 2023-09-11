@@ -2,7 +2,7 @@
 A repository for the research of clustering methods for functional data analysis on high-dimensional data.
 
 # What is the problem?
-Extending clustering methods on high-dimensional functional data is an active field of research in both real-world industries and academic applications. The problem is basically characterized by the nature of the data:
+Extending clustering methods on high-dimensional functional data is an active field of research in both real-world industry and academic applications. The problem is basically characterized by the nature of the data:
 - The data space is high-dimensional (a non-trivial amount of rows and columns).
 - The data is functional: the data is continuum as it comes from a continuum source (usually time-dependent).
 - Clustering data of this nature implies that a cluster consist not of data points but by many observations of related data points usually known as "curves".
