@@ -35,6 +35,7 @@ functional_data_analysis
     │       ├───plotly-htmlwidgets-css-2.11.1
     │       ├───plotly-main-2.11.1
     │       └───typedarray-0.1
+    │       │ plot_list.RDS
     └───modules
         ├───clustering
         ├───library_manager
@@ -44,4 +45,6 @@ functional_data_analysis
         ├───unused
         ├───visualization
         └───write_data
+    │ .Rhistory
+    │ main.r
 ```
