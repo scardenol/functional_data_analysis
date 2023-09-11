@@ -17,3 +17,31 @@ We develop everything in the programming language `R 4.2.2` using both the tradi
 
 # Why `R`?
 The reasoning behind using this programming language is because the most serious research done on this subject is published in `R` code, as it already has peer-reviewed and cited libraries/packages on functional data analysis such as (`fda.usc`)[https://cran.r-project.org/web/packages/fda.usc/fda.usc.pdf].
+
+# Project structure
+```bash
+functional_data_analysis
+├───data
+└───src
+    ├───images
+    │   └───lib
+    │       ├───crosstalk-1.2.0
+    │       │   ├───css
+    │       │   ├───js
+    │       │   └───scss
+    │       ├───htmlwidgets-1.6.2
+    │       ├───jquery-3.5.1
+    │       ├───plotly-binding-4.10.1
+    │       ├───plotly-htmlwidgets-css-2.11.1
+    │       ├───plotly-main-2.11.1
+    │       └───typedarray-0.1
+    └───modules
+        ├───clustering
+        ├───library_manager
+        ├───numerical
+        ├───preprocessing
+        ├───read_data
+        ├───unused
+        ├───visualization
+        └───write_data
+```
