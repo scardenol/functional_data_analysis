@@ -25,17 +25,17 @@ functional_data_analysis
 └───src
     ├───images
     │   └───lib
-    │       ├───crosstalk-1.2.0
-    │       │   ├───css
-    │       │   ├───js
-    │       │   └───scss
-    │       ├───htmlwidgets-1.6.2
-    │       ├───jquery-3.5.1
-    │       ├───plotly-binding-4.10.1
-    │       ├───plotly-htmlwidgets-css-2.11.1
-    │       ├───plotly-main-2.11.1
-    │       └───typedarray-0.1
-    │       │ plot_list.RDS
+    │   │   ├───crosstalk-1.2.0
+    │   │   │   ├───css
+    │   │   │   ├───js
+    │   │   │   └───scss
+    │   │   ├───htmlwidgets-1.6.2
+    │   │   ├───jquery-3.5.1
+    │   │   ├───plotly-binding-4.10.1
+    │   │   ├───plotly-htmlwidgets-css-2.11.1
+    │   │   ├───plotly-main-2.11.1
+    │   │   └───typedarray-0.1
+    │   └───plot_list.RDS
     └───modules
         ├───clustering
         ├───library_manager
