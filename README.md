@@ -11,3 +11,9 @@ Extending clustering methods on high-dimensional functional data is an active fi
 We develop both and extension and a new methodology to perform data analysis on this kind of data by taking two approaches:
 - A distance-based traditional crisp (or hard) clustering where we compare our own custom functional PAM method with the functional version of the traditional k-means in both an euclidean and manhattan normed spaces.
 - A density-based fuzzy (or soft) clustering where we introduce a new methodology by using the HDBSCAN (Hierarchical Density-Based Spatial Clustering of Applications with Noise) method to cluster the data with no hard assumptions like the distance-based methods.
+
+# What programming language do we use?
+We develop everything in the programming language `R 4.2.2` using both the traditional IDE `RStudio 2023.06.1+524` and the popular IDE `VS Code 1.82`.
+
+# Why `R`?
+The reasoning behind using this programming language is because the most serious research done on this subject is published in R code, as it already has peer-reviewed and cited libraries/packages on functional data analysis like (`fda.usc`)[https://cran.r-project.org/web/packages/fda.usc/fda.usc.pdf].
