@@ -16,4 +16,4 @@ We develop both and extension and a new methodology to perform data analysis on 
 We develop everything in the programming language `R 4.2.2` using both the traditional IDE `RStudio 2023.06.1+524` and the popular IDE `VS Code 1.82`.
 
 # Why `R`?
-The reasoning behind using this programming language is because the most serious research done on this subject is published in R code, as it already has peer-reviewed and cited libraries/packages on functional data analysis like (`fda.usc`)[https://cran.r-project.org/web/packages/fda.usc/fda.usc.pdf].
+The reasoning behind using this programming language is because the most serious research done on this subject is published in `R` code, as it already has peer-reviewed and cited libraries/packages on functional data analysis such as (`fda.usc`)[https://cran.r-project.org/web/packages/fda.usc/fda.usc.pdf].
