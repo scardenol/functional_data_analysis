@@ -161,7 +161,7 @@ p_hdbscan_raw <- plot_fdata(format_filtered_long_data(users_lf), plot_labels = p
 
 # 2. Distance-based clustering with: custom pam, k-means (Manhattan), k-means (Euclidean)
 k_hdbscan <- length(unique(hdbscan_res$cluster)) # number of clusters from hdbscan
-K <- 2:(2 * k_hdbscan) # number of clusters to try
+K <- 2:(2 * k_hdbscan - 2) # number of clusters to try
 distance_res <- distance_based_clustering(users_fdata_filtered, K = K, verbose = "minimal")
 # Extract results for pam
 pam_res <- distance_res$pam_res
@@ -227,6 +227,7 @@ p_users_vs_pam <- plot_res$p_users_vs_distance
 plot_list <- list(
   p_raw = p_raw,
   p_scaled = p_scaled,
+  p_deepest_bands = p_deepest_bands,
   p_filtered = p_filtered,
   p_hdbscan = p_hdbscan,
   p_hdbscan_raw = p_hdbscan_raw,
