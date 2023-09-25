@@ -66,6 +66,30 @@ filter_by_date <- function(users, start_date = "2022-09-01") {
   return(users)
 }
 
+# Remove users with value of 0 for 80% of all dates. The input is a list of data.frames.
+remove_zero_users <- function(users, interval = c(0, 1), freq = 0.8) {
+  # Get the number of rows for each user
+  rows <- lapply(users, nrow)
+  # Get the unique number of hours per date
+  hours <- length(unique(users[[1]][["hour"]]))
+  # Get the number of allowed hours to be 0
+  zero_hours <- round(hours * freq)
+  # Group each data.frame by date and count the number of times the value is 0 for each date
+  group <- lapply(users, group_by, date)
+  count <- lapply(group, summarise, count = sum(value >= interval[1] & value <= interval[2]))
+  # Count the number of times the previous count is >= zero_hours but preserve the date column
+  cond <- lapply(count, function(x) x$count >= zero_hours)
+  # Filter each count by its corresponding condition
+  count <- mapply(function(x, y) x[y, ], count, cond, SIMPLIFY = FALSE)
+  # Each element of count is a tibble of date and count, remove the matching dates for each
+  # corresponding user
+  for (i in seq_along(count)) {
+    users[[i]] <- users[[i]] %>% filter(!date %in% count[[i]][["date"]])
+  }
+  # Return the filtered users
+  return(users)
+}
+
 # Check how many complete days of data we have for each user vs the
 # total amount of days
 # Create a function to check this
@@ -321,11 +345,11 @@ get_deepest_bands <- function(data, users) {
 }
 
 # Create a function that filters the data by the deepest bands.
-# The functions takes the data, the deepest bands, and the depth percentage.
-# The depth percentage is the percentage of the time the data must be within the deepest band.
-# The default depth percentage is 0.75, which means we aim for the 25% deepest curves.
+# The functions takes the data, the deepest bands, and the freq percentage.
+# The freq percentage is the percentage of the time the data must be within the deepest band.
+# The default freq percentage is 0.75, which means we aim for the 25% deepest curves.
 # The function returns the indexes of the rows that are within the deepest bands.
-filter_data <- function(data, deepest_bands, depth = 0.75) {
+filter_data <- function(data, deepest_bands, freq = 0.75) {
   # Initialize variables
   results <- list(filtered_data = c(), curves_idx = c())
   # Iterate through each deepest band
@@ -338,10 +362,10 @@ filter_data <- function(data, deepest_bands, depth = 0.75) {
     filtered_data <- data[curves_idx, ]
     # row-wise sum the number of times filtered_data >= lower and <= upper
     cond <- apply(filtered_data, 1, function(x) sum(x >= lower & x <= upper))
-    # Convert the depth percentage to a number of rows
-    depth_rows <- round(length(upper) * depth)
-    # Get the indexes of the rows that are >= depth_rows
-    temp_idx <- which(cond >= depth_rows)
+    # Convert the freq percentage to a number of rows
+    freq_rows <- round(length(upper) * freq)
+    # Get the indexes of the rows that are >= freq_rows
+    temp_idx <- which(cond >= freq_rows)
     # Compute the indexes of the original data using curves_idx
     idx <- curves_idx[temp_idx]
     # Filter data by the indexes

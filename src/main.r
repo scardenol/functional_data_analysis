@@ -85,6 +85,9 @@ users <- preprocess_users(users)
 # Keep only the last 4 months of data (2022-09-01 to 2022-12-31) dplyr style
 users <- filter_by_date(users, start_date = "2022-09-01")
 
+# Remove users with value close to 0 on an interval for a given frequency of hours per date
+users <- remove_zero_users(users, interval = c(0, 0.8), freq = 0.8)
+
 # Check how many complete days of data we have for each user vs the
 # total amount of days
 days_df <- check_days(users, user_name_col = "id_service")
@@ -137,9 +140,9 @@ colors <- unique(ggplot_build(p_raw)$data[[1]]$colour)
 deepest_bands <- get_deepest_bands(users_fdata_scaled$data, users_id)
 # Plot the deepest bands for each user
 p_deepest_bands <- plot_deepest_bands(users_scaled_lf, deepest_bands, plot_labels = plot_labels, colors = colors)
-# Filter data by the deepest bands with a depth of 0.75
+# Filter data by the deepest bands with a frequency of 0.75
 users_fdata_filtered <- users_fdata_scaled # copy fdata object
-filter_results <- filter_data(users_fdata_scaled$data, deepest_bands, depth = 0.75)
+filter_results <- filter_data(users_fdata_scaled$data, deepest_bands, freq = 0.75)
 # Extract results
 users_fdata_filtered$data <- filter_results$filtered_data # filtered data
 filter_idx <- filter_results$curves_idx # original index of the filtered curves
