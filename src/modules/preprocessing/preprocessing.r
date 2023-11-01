@@ -21,7 +21,8 @@ check_columns <- function(users) {
     colnames(results) <- c("class")
     print(results)
   } else {
-    print("The columns are not the same")
+    # Raise error
+    stop("The columns are not the same")
   }
 }
 
@@ -120,7 +121,7 @@ check_days <- function(users, user_name_col = "id_service") {
 }
 
 # Filter users by matching dates
-matching_dates <- function(users, days_df) {
+matching_dates <- function(users, days_df, verbose = TRUE) {
   # Find the user with the least number of 24-hour recorded days
   idx <- which.min(days_df[, 2])
   # Users have different lengths, so we filter by the user idx
@@ -133,8 +134,10 @@ matching_dates <- function(users, days_df) {
   # Check row wise if all users match on each date
   matching_dates_table <- Reduce(`&`, cond)
   # Count the number of days where user have matching dates for 24-hour records
-  print("# days where users have matching dates for 24h records")
-  print(table(matching_dates_table == TRUE))
+  if (verbose) {
+    print("# days where users have matching dates for 24h records")
+    print(table(matching_dates_table == TRUE))
+  }
   # Get the dates that match for all users
   matching_dates <- names(matching_dates_table[matching_dates_table == TRUE])
 
@@ -143,7 +146,7 @@ matching_dates <- function(users, days_df) {
     users[[i]] <- users[[i]] %>% filter(date %in% matching_dates)
   }
   # Pack list with results
-  results <- list(users = users, dates = matching_dates)
+  results <- list(users = users, dates = matching_dates, table = matching_dates_table)
   return(results)
 }
 

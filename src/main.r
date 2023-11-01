@@ -86,7 +86,7 @@ users <- preprocess_users(users)
 users <- filter_by_date(users, start_date = "2022-09-01")
 
 # Remove users with value close to 0 on an interval for a given frequency of hours per date
-users <- remove_zero_users(users, interval = c(0, 0.8), freq = 0.8)
+users <- remove_zero_users(users, interval = c(0, 1), freq = 0.8)
 
 # Check how many complete days of data we have for each user vs the
 # total amount of days
@@ -164,7 +164,7 @@ p_hdbscan_raw <- plot_fdata(format_filtered_long_data(users_lf), plot_labels = p
 
 # 2. Distance-based clustering with: custom pam, k-means (Manhattan), k-means (Euclidean)
 k_hdbscan <- length(unique(hdbscan_res$cluster)) # number of clusters from hdbscan
-K <- 2:(2 * k_hdbscan - 2) # number of clusters to try
+K <- 2:(2 * k_hdbscan) # number of clusters to try
 distance_res <- distance_based_clustering(users_fdata_filtered, K = K, verbose = "minimal")
 # Extract results for pam
 pam_res <- distance_res$pam_res

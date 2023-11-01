@@ -138,11 +138,16 @@ pam_fd <- function(fun_data, k, metric = "euclidean", initial_medoids = "pp") {
 }
 
 # Create an auxiliary function to call the hdbscan function
-hdbscan_fd <- function(fun_data) {
+hdbscan_fd <- function(fun_data, gen_hdbscan_tree = FALSE, gen_simplified_tree = FALSE, verbose = FALSE) {
     # Compute the number of columns of the data
     cols <- ncol(fun_data$data)
     # Takes the data and minPts = columns + 1
-    results <- hdbscan(fun_data$data, minPts = cols + 1)
+    results <- hdbscan(fun_data$data,
+        minPts = cols + 1,
+        gen_hdbscan_tree = gen_hdbscan_tree,
+        gen_simplified_tree = gen_simplified_tree,
+        verbose = verbose
+    )
     results$cluster <- results$cluster + 1 # Make cluster labels start from 1
     return(results)
 }
