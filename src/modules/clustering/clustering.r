@@ -138,19 +138,92 @@ pam_fd <- function(fun_data, k, metric = "euclidean", initial_medoids = "pp") {
 }
 
 # Create an auxiliary function to call the hdbscan function
-hdbscan_fd <- function(fun_data, gen_hdbscan_tree = FALSE, gen_simplified_tree = FALSE, verbose = FALSE) {
-    # Compute the number of columns of the data
-    cols <- ncol(fun_data$data)
-    # Takes the data and minPts = columns + 1
+hdbscan_fd <- function(fun_data, method=NULL, minPts = NULL, gen_hdbscan_tree = FALSE, gen_simplified_tree = FALSE, verbose = FALSE) {
+    # If fun_data is empty return an error
+    if (is.null(fun_data)) stop("fun_data is empty")
+    # If minPts is NULL, set it to the number of columns of the data + 1
+    if (is.null(minPts)) {
+        minPts <- ncol(fun_data$data) + 1
+    }
+    # If method is not null check that it is any of c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")
+    if (!is.null(method)) {
+        if (!method %in% c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")) {
+            stop("method is not any of c('euclidean', 'maximum', 'manhattan', 'canberra', 'binary', 'minkowski')")
+        }
+    }
+    # If method is null call hdbscan with default parameters
+    if (is.null(method)) {
     results <- hdbscan(fun_data$data,
-        minPts = cols + 1,
+        minPts = minPts,
         gen_hdbscan_tree = gen_hdbscan_tree,
         gen_simplified_tree = gen_simplified_tree,
         verbose = verbose
     )
+    } else {
+        # Precompute the distance matrix with dist and the passed method
+        dist_mat <- dist(fun_data$data, method = method)
+        # Call hdbscan with the precomputed distance matrix
+        results <- hdbscan(dist_mat,
+            minPts = minPts,
+            gen_hdbscan_tree = gen_hdbscan_tree,
+            gen_simplified_tree = gen_simplified_tree,
+            verbose = verbose
+        )
+    }
     results$cluster <- results$cluster + 1 # Make cluster labels start from 1
     return(results)
 }
+
+# Function that runs the hdbscan_fd function for multiple values of minPts, takes the cluster_scores
+# results, computes the mean of the cluster_scores and returns a data frame with two columns: minPts
+# and mean_cluster_scores.
+hdbscan_multiple_minPts <- function(fun_data, minPts = 2:10, method = NULL) {
+    # Check if fun_data is a functional data object
+    if (!is.fdata(fun_data)) stop("fun_data is not functional data")
+    # Check if minPts is a numerical vector
+    if (!is.numeric(minPts)) stop("minPts is not numerical")
+    # Check if minPts is a vector with values greater than 1
+    if (any(minPts < 2)) stop("minPts cant have values less than 2")
+    # If method is not null, check that it is any of c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")
+    if (!is.null(method)) {
+        if (!method %in% c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")) {
+            stop("method is not any of c('euclidean', 'maximum', 'manhattan', 'canberra', 'binary', 'minkowski')")
+        }
+    }
+
+    # Create an empty list to store the results
+    results <- list(
+        minPts = minPts,
+        mean_cluster_scores = c(),
+        num_clusters = c()
+    )
+
+    # Iterate over multiple values of minPts
+    for (minPts in minPts) {
+        # Run hdbscan
+        hdbscan_res <- hdbscan_fd(fun_data, minPts = minPts, method = method)
+        # Extract cluster_scores from the results
+        cluster_scores <- hdbscan_res$cluster_scores
+        # Compute mean of cluster_scores
+        mean_cluster_scores <- mean(cluster_scores)
+        # Append results to list
+        results$mean_cluster_scores <- c(results$mean_cluster_scores, mean_cluster_scores)
+        # Compute number of clusters
+        num_clusters <- length(unique(hdbscan_res$cluster))
+        # Append results to list
+        results$num_clusters <- c(results$num_clusters, num_clusters)
+    }
+
+    # Convert results to data frame
+    results <- as.data.frame(results)
+
+    # Clean up results in case there are any NA values
+    results <- results[complete.cases(results),]
+
+    # Return results
+    return(results)
+}
+
 
 # Function to gather the cluster size and average silhouette width for each cluster
 # Takes a silhouette class object and prints the results

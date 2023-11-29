@@ -60,6 +60,7 @@ files <- c(
   "id_service_3314.xlsx",
   "id_service_3325.xlsx"
 )
+# files <- c("consumption_services.xlsx")
 
 # Set the path to the data files
 file_path <- paste(dirname(getwd()), "/data/", sep = "")
@@ -70,6 +71,11 @@ users <- read_files(files, file_path, col_range = cell_cols("C:F"))
 # Convert each user into data frame
 users <- lapply(users, as.data.frame)
 
+# If files contains only one file, split the data frame into a list of data frames
+if (length(files) == 1) {
+  users <- split_df(users$users, split_col = "id_service")
+}
+
 # Check if the columns have the same name and data type for every user
 check_columns(users)
 
@@ -77,10 +83,11 @@ check_columns(users)
 print_dim(users)
 
 # Preprocess users:
-# - Drop the "name" column
+# - Pass the columns to keep
 # - Separate the timestamp column "record_timestamp" into date and time
 # - Consolidate time column into hour
-users <- preprocess_users(users)
+columns <- c("record_timestamp", "id_service", "value")
+users <- preprocess_users(users, columns, timestamp_col = "record_timestamp")
 
 # Keep only the last 4 months of data (2022-09-01 to 2022-12-31) dplyr style
 users <- filter_by_date(users, start_date = "2022-09-01")
@@ -153,11 +160,18 @@ p_filtered <- plot_fdata(users_filtered_lf, plot_labels = plot_labels, group_by 
 
 
 # Experimentation
+method <- "euclidean"
+# 0. Run hdbscan_multiple_minPts to find the optimal minPts parameter
+opt_minpts_df <- hdbscan_multiple_minPts(users_fdata_filtered, minPts = 2:100, method = method)
+# Compute the optimal minPts parameter
+opt_idx <- which.max(opt_minpts_df$mean_cluster_scores)
+opt_minpts <- opt_minpts_df$minPts[opt_idx]
+
 # 1. Density-based clustering with HDBSCAN
-hdbscan_res <- hdbscan_fd(users_fdata_filtered)
+hdbscan_res <- hdbscan_fd(users_fdata_filtered, minPts = opt_minpts, method = method)
 
 # Plot results
-p_hdbscan <- plot_fdata(users_filtered_lf, plot_labels = plot_labels, group_by = hdbscan_res$cluster, legend_title = "Cluster")
+p_hdbscan <- plot_hdbscan_results(users_filtered_lf, hdbscan_res, opt_minpts_df)
 
 # Visualize clusters on unscaled data
 p_hdbscan_raw <- plot_fdata(format_filtered_long_data(users_lf), plot_labels = plot_labels, group_by = hdbscan_res$cluster, legend_title = "Cluster")
@@ -247,11 +261,14 @@ plot_list <- list(
   p_users_vs_pam = p_users_vs_pam
 )
 
+# Set directory
+dir_name <- "images"
+
 # Save the plot_list as an R object
-write_object(plot_list, file_name = "plot_list", dir_name = "images")
+write_object(plot_list, file_name = "plot_list", dir_name = dir_name)
 
 # Read the plot_list from the R object
-plot_list <- readRDS("images/plot_list.RDS")
+plot_list <- readRDS(paste(dir_name, "/plot_list.RDS", sep = ""))
 
 # Save each plot from plot_list as an interactive html file
-write_html_plots(plot_list, dir_name = "images", width = 1300, height = 600)
+write_html_plots(plot_list, dir_name = dir_name, width = 1300, height = 600)

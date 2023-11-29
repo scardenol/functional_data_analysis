@@ -1,3 +1,18 @@
+# Function that takes a data frame and a column name and returns a list of data frames
+# split based on the unique values of the column name
+split_df <- function(df, split_col = "id_service") {
+  # Use split to generate a named list of data frames
+  df_list <- split(df, df[[split_col]])
+  # Get the names of each element of the list
+  list_names <- names(df_list)
+  # Generate a list of names in format "useri" where i is the index of the name in list_names
+  new_names <- paste("user", seq_along(list_names), sep = "")
+  # Rename the list elements
+  names(df_list) <- new_names
+  # Return list of data frames
+  return(df_list)
+}
+
 # Function to get column classes
 get_column_classes <- function(df) {
   sapply(df, class)
@@ -33,12 +48,19 @@ print_dim <- function(users) {
   return(results)
 }
 
-# Create a simple preprocessing function that takes the data and: drops the r_value column,
+# Create a simple preprocessing function that takes the data and columns: selects the columns to keep,
 # separates the timestamp column into date and time columns, and separates the time column into hour column
-preprocess <- function(data, timestamp_col = "record_timestamp", drop_col = "name") {
-  # drop r_value column for now
-  drop_idx <- grep(drop_col, colnames(data))
-  data <- data[, -drop_idx]
+preprocess <- function(data, columns, timestamp_col = "record_timestamp") {
+  # Check if columns is not empty raise error otherwise
+  if (length(columns) == 0) stop("Columns is empty")
+  # Check if timestamp_col is not empty raise error otherwise
+  if (length(timestamp_col) == 0) stop("Timestamp column is empty")
+  # Check if timestamp_col is in columns raise error otherwise
+  if (!(timestamp_col %in% columns)) stop("Timestamp column is not in columns")
+  # Check if data is not empty raise error otherwise
+  if (nrow(data) == 0) stop("Data is empty")
+  # Select and keep only the columns in columns
+  data <- data[, columns]
   # separate timestamp column timestamp_col into "date" and "time" columns
   data <- separate(data, timestamp_col, c("date", "time"), sep = " ")
   # Supress possible warning from separate
@@ -52,9 +74,9 @@ preprocess <- function(data, timestamp_col = "record_timestamp", drop_col = "nam
 }
 
 # Preprocess all users
-preprocess_users <- function(users, timestamp_col = "record_timestamp", drop_col = "name") {
+preprocess_users <- function(users, columns, timestamp_col = "record_timestamp") {
   for (i in seq_along(users)) {
-    users[[i]] <- preprocess(users[[i]], timestamp_col, drop_col)
+    users[[i]] <- preprocess(users[[i]], columns, timestamp_col)
   }
   return(users)
 }
@@ -391,4 +413,64 @@ format_filtered_long_data <- function(data_lf, group_by = users_id, filter_by = 
   # Filter long format data
   users_lf <- users_lf[users_lf$label %in% filter_by, ] # filter long format data
   return(users_lf)
+}
+
+# Function that takes the data, users, and a vector of integers, iterates through each user
+# and shifts the columns of the data by the corresponding integer in the vector.
+# The function returns the data with the shifted columns.
+shift_columns <- function(data, users, shift) {
+  # Check that each parameter is not null, else raise error
+  if (length(data) == 0) stop("Data is empty")
+  if (length(users) == 0) stop("Users is empty")
+  if (length(shift) == 0) stop("Shift is empty")
+  # Check that the length of unique users is the same as the length of shift, else raise error
+  if (length(unique(users)) != length(shift)) stop("Length of users and shift are not the same")
+  # Initialize counter to iterate through shift
+  i <- 1
+  # Get the unique users id
+  ids <- unlist(unique(users))
+  # Iterate through each user
+  for (id in ids) {
+    # Find which rows of users are equal to the current id
+    idx <- which(users == id)
+    # Filter data by the current user
+    user_data <- data[idx, ]
+    # Extract the names of the columns
+    col_names <- colnames(user_data)
+    # Extract the current shift value
+    current_shift <- shift[i]
+    # If the current shif is positive, shift the columns to the right current_shift number of times
+    if (current_shift > 0) {
+      for (col in col_names) {
+        # Check if the counter is less than the current shift value
+        if (i <= current_shift) {
+          # Move the col_names vector one position to the right
+          col_names <- c(col_names[length(col_names)], col_names[1:(length(col_names) - 1)])
+          # Increment counter
+          i <- i + 1
+        }
+      }
+    } else {
+      # If the current shif is negative, shift the columns to the left current_shift number of times
+      for (col in col_names) {
+        # Check if the counter is less than the abs(current_shift) value
+        if (i <= abs(current_shift)) {
+          # Move the col_names vector one position to the left
+          col_names <- c(col_names[2:length(col_names)], col_names[1])
+          # Increment counter
+          i <- i + 1
+        }
+      }
+    }
+    # Set the column names of the user_data to the col_names vector
+    colnames(user_data) <- col_names
+    # Sort col_names vector
+    col_names <- sort(col_names)
+    # Set the user_data matrix array to the sorted col_names vector
+    user_data <- user_data[, col_names]
+    # Replace the data with the user_data
+    data[idx, ] <- user_datas
+  }
+  # Return the data with the shifted columns
+  return(data)
 }

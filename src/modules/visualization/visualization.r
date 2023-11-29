@@ -84,6 +84,43 @@ plot_deepest_bands <- function(data_lf, deepest_bands, plot_labels = NULL, color
     return(results)
 }
 
+# Auxiliary function to plot hdbscan results
+plot_hdbscan_results <- function(data_lf, hdbscan_res, opt_minpts_df) {
+    # Plot the results of hdbscan
+    p_hdbscan <- plot_fdata(data_lf, plot_labels = plot_labels, group_by = hdbscan_res$cluster, legend_title = "Cluster")
+
+    # Store both the optimal minPts and its mean cluster score
+    opt_idx <- which.max(opt_minpts_df$mean_cluster_scores)
+    opt_minpts <- opt_minpts_df$minPts[opt_idx]
+    opt_minpts_mean_cluster_score <- opt_minpts_df$mean_cluster_scores[opt_idx]
+
+    # Plot results as a line plot. Highlight the optimal minPts by changing the color of the point. Add a vertical dashed line as well.
+    p_opt_minpts <- ggplot(opt_minpts_df, aes(x = minPts, y = mean_cluster_scores)) +
+        geom_line() +
+        geom_point() +
+        geom_point(aes(x = opt_minpts, y = opt_minpts_mean_cluster_score), color = "red") +
+        geom_vline(xintercept = opt_minpts, linetype = "dashed", color = "red") +
+        labs(x = "minPts", y = "Mean cluster scores", title = "Mean cluster scores vs minPts")
+
+    # Plot number of clusters vs minPts
+    p_num_clusters <- ggplot(opt_minpts_df, aes(x = minPts, y = num_clusters)) +
+        geom_line() +
+        geom_point() +
+        geom_point(aes(x = opt_minpts, y = num_clusters[opt_idx]), color = "red") +
+        geom_vline(xintercept = opt_minpts, linetype = "dashed", color = "red") +
+        labs(x = "minPts", y = "Number of clusters", title = "Number of clusters vs minPts")
+
+    # Store plots in a named list
+    results <- list(
+        p_hdbscan = p_hdbscan,
+        p_opt_minpts = p_opt_minpts,
+        p_num_clusters = p_num_clusters
+    )
+
+    # Return results
+    return(results)
+}
+
 # Plot function to visualize the results of distance-based clustering
 plot_distance_results <- function(results_df, result_type = NULL) {
     # List of possible result types

@@ -3,21 +3,32 @@
 # which means:
 # - They are identically stored
 # - They require the same configuration
-#______________________________________________________________________________
+# ______________________________________________________________________________
 
 # Take a list of excel file names, read each file and store them in a list
 read_files <- function(file_names, file_path, col_range = NULL) {
   # Initialize file list and counter
   files <- list()
   i <- 0
-  for (file in file_names) {
-    i <- i + 1
-    name <- paste("user", i, sep = "")
-    files[[name]] <- read_excel(path = paste(file_path, file, sep = ""),
-                                range = col_range)
+  # If file_names has multiple files
+  if (length(file_names) > 1) {
+    for (file in file_names) {
+      i <- i + 1
+      name <- paste("user", i, sep = "")
+      files[[name]] <- read_excel(
+        path = paste(file_path, file, sep = ""),
+        range = col_range
+      )
+    }
+  } else {
+    # If file_names has only one file
+    files[["users"]] <- read_excel(
+      path = paste(file_path, file_names, sep = ""),
+      range = col_range
+    )
   }
   # Return named list of files
   return(files)
 }
 
-#______________________________________________________________________________
+# ______________________________________________________________________________

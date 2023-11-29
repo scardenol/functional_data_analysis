@@ -61,6 +61,7 @@ files <- c(
     "id_service_3314.xlsx",
     "id_service_3325.xlsx"
 )
+# files <- c("consumption_services.xlsx")
 
 # Set the path to the data files
 file_path <- paste(dirname(getwd()), "/data/", sep = "")
@@ -71,6 +72,11 @@ users <- read_files(files, file_path, col_range = cell_cols("C:F"))
 # Convert each user into data frame
 users <- lapply(users, as.data.frame)
 
+# If files contains only one file, split the data frame into a list of data frames
+if (length(files) == 1) {
+    users <- split_df(users$users, split_col = "id_service")
+}
+
 # Check if the columns have the same name and data type for every user
 check_columns(users)
 
@@ -78,10 +84,11 @@ check_columns(users)
 print_dim(users)
 
 # Preprocess users:
-# - Drop the "name" column
+# - Pass the columns to keep
 # - Separate the timestamp column "record_timestamp" into date and time
 # - Consolidate time column into hour
-users <- preprocess_users(users)
+columns <- c("record_timestamp", "id_service", "value")
+users <- preprocess_users(users, columns, timestamp_col = "record_timestamp")
 
 # Testing parameters
 start_dates <- c(
