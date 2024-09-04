@@ -291,7 +291,7 @@ fdata_to_long <- function(data, str_dates = dates) {
   ncurves <- rows / cols # number of curves to plot
   # Add date column
   users_lf$date <- unlist(unlist(do.call(rbind, replicate(rows / ndates, as.data.frame(str_dates), simplify = FALSE))))
-  # We need to creat a label column that would act as a curve index
+  # We need to create a label column that would act as a curve index
   users_lf$label <- unlist(unlist(do.call(rbind, replicate(cols, as.data.frame(1:ncurves), simplify = FALSE))))
 
   return(users_lf)

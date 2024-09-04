@@ -286,7 +286,7 @@ distance_based_clustering <- function(fun_data, K = 2:10, verbose = FALSE) {
     for (k in K) {
         if (verbose | minimal) {
             # Print current iteration
-            print(paste("-------------------------", "k =", k, "-------------------------"))
+            message(paste("-------------------------", "k =", k, "-------------------------", "\n"))
         }
 
         # ------------------------------- k-means -----------------------------------------
@@ -324,8 +324,8 @@ distance_based_clustering <- function(fun_data, K = 2:10, verbose = FALSE) {
 
         if (verbose) {
             # print progress with summary
-            print("Functional k-means with Euclidean distance")
-            print(summary_kmeans)
+            message("Functional k-means with Euclidean distance\n")
+            message(paste(summary_kmeans, "\n", sep=''))
         }
 
         # ------------------------------- PAM -----------------------------------------
@@ -363,8 +363,8 @@ distance_based_clustering <- function(fun_data, K = 2:10, verbose = FALSE) {
 
         if (verbose) {
             # print progress with summary
-            print("Functional PAM with Euclidean distance")
-            print(summary_pam)
+            message("Functional PAM with Euclidean distance\n")
+            message(paste(summary_pam, "\n", sep=''))
         }
 
         # ------------------------------- k-means Manhattan --------------------------------------
@@ -402,8 +402,8 @@ distance_based_clustering <- function(fun_data, K = 2:10, verbose = FALSE) {
 
         if (verbose) {
             # print progress with summary
-            print("Functional k-means with Manhattan distance")
-            print(summary_kmeans_man)
+            message("Functional k-means with Manhattan distance\n")
+            message(paste(summary_kmeans_man, "\n" ,sep=''))
         }
     }
 
