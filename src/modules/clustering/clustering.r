@@ -195,6 +195,8 @@ hdbscan_multiple_minPts <- function(fun_data, minPts = 2:10, method = NULL) {
     results <- list(
         minPts = minPts,
         mean_cluster_scores = c(),
+        mean_membership_prob = c(), # new
+        mean_outlier_scores = c(), # new
         num_clusters = c()
     )
 
@@ -202,12 +204,18 @@ hdbscan_multiple_minPts <- function(fun_data, minPts = 2:10, method = NULL) {
     for (minPts in minPts) {
         # Run hdbscan
         hdbscan_res <- hdbscan_fd(fun_data, minPts = minPts, method = method)
-        # Extract cluster_scores from the results
+        # Extract cluster_scores, membership_prob, outlier_scores from the results
         cluster_scores <- hdbscan_res$cluster_scores
-        # Compute mean of cluster_scores
+        membership_prob <- hdbscan_res$membership_prob
+        outlier_scores <- hdbscan_res$outlier_scores
+        # Compute mean of each metric
         mean_cluster_scores <- mean(cluster_scores)
+        mean_membership_prob <- mean(membership_prob)
+        mean_outlier_scores <- mean(outlier_scores)
         # Append results to list
         results$mean_cluster_scores <- c(results$mean_cluster_scores, mean_cluster_scores)
+        results$mean_membership_prob <- c(results$mean_membership_prob, mean_membership_prob)
+        results$mean_outlier_scores <- c(results$mean_outlier_scores, mean_outlier_scores)
         # Compute number of clusters
         num_clusters <- length(unique(hdbscan_res$cluster))
         # Append results to list
