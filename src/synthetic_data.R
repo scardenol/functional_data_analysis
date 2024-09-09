@@ -64,9 +64,17 @@ res_distance <- data.frame()
 # Start timing
 start.time <- Sys.time()
 # Experiment parameters
-# Seed. 31
+
+# Set directory for output
+dir_name <- "experiment1"
+
+# Random seed
 set.seed(31)
+
+# Iterations
 num_iterations <- 100
+
+# Initialize loop variables
 counter <- 0
 iteration <- 0
 
@@ -306,9 +314,6 @@ plot_list <- list(
   p_ci = p_ci,
   p_di = p_di
 )
-
-# Set directory
-dir_name <- "experiment1"
 
 # Save the plot_list as an R object
 write_object(plot_list, file_name = "plot_list", dir_name = dir_name)
