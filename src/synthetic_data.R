@@ -66,7 +66,7 @@ start.time <- Sys.time()
 # Experiment parameters
 # Seed. 31
 set.seed(31)
-num_iterations <- 5
+num_iterations <- 100
 counter <- 0
 iteration <- 0
 
@@ -323,7 +323,7 @@ write_html_plots(plot_list, dir_name = dir_name, width = 1300, height = 600)
 # -[x] generalize prob_stability, outlier_glosh
 # -[x] Motivation: what is a better hdbscan metric to optimize minPts?
 # -[x] Experiment: add a mini experiment to answer the previous question
-# -[ ] title: make plots pretty
+# -[x] title: make plots pretty
 # -[x] export: refactor the code to output the plot results to a dir
 
 time.taken <- difftime(end.time, start.time, units='mins')
