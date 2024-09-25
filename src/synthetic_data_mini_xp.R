@@ -72,9 +72,10 @@ minpts_search <- 2:100
 K <- 2:4 # number of clusters
 
 # Hyperparameter settings for each experiment
+# We repeat experiment 3 with small changes over all parameters
 settings <- list(
   experiment1 = list(
-    dir_name = "experiment1",
+    dir_name = "mini_experiment1",
     alpha = list(a1 = 0.2, a2 = 0.2, a3 = 0.2),
     beta = list(b1 = 0.3, b2 = 0.3, b3 = 0.3),
     centerline = list(c1 = sin(pi*grid),
@@ -82,15 +83,15 @@ settings <- list(
                       c3 = sin(pi*grid))
   ),
   experiment2 = list(
-    dir_name = "experiment2",
+    dir_name = "mini_experiment2",
     alpha = list(a1 = 0.2, a2 = 0.2, a3 = 0.2),
     beta = list(b1 = 0.3, b2 = 0.3, b3 = 0.3),
-    centerline = list(c1 = sin(pi*grid),
-                      c2 = cos(pi*grid),
-                      c3 = sin(pi*grid + 1.5*pi))
+    centerline = list(c1 = sin(pi*grid) - 1,
+                      c2 = sin(pi*grid),
+                      c3 = sin(pi*grid) + 1)
   ),
   experiment3 = list(
-    dir_name = "experiment3",
+    dir_name = "mini_experiment3",
     alpha = list(a1 = 0.2, a2 = 0.2, a3 = 0.2),
     beta = list(b1 = 0.3, b2 = 0.3, b3 = 0.3),
     centerline = list(c1 = sin(pi*grid) - 2,
@@ -98,28 +99,28 @@ settings <- list(
                       c3 = sin(pi*grid) + 2)
   ),
   experiment4 = list(
-    dir_name = "experiment4",
-    alpha = list(a1 = 0.2, a2 = 0.4, a3 = 0.6),
+    dir_name = "mini_experiment4",
+    alpha = list(a1 = 0.2, a2 = 0.2, a3 = 0.2),
     beta = list(b1 = 0.3, b2 = 0.3, b3 = 0.3),
-    centerline = list(c1 = sin(pi*grid),
-                      c2 = cos(pi*grid),
-                      c3 = sin(pi*grid + 1.5*pi))
+    centerline = list(c1 = sin(pi*grid) - 3,
+                      c2 = sin(pi*grid),
+                      c3 = sin(pi*grid) + 3)
   ),
   experiment5 = list(
-    dir_name = "experiment5",
+    dir_name = "mini_experiment5",
     alpha = list(a1 = 0.2, a2 = 0.2, a3 = 0.2),
-    beta = list(b1 = 0.3, b2 = 0.6, b3 = 0.9),
-    centerline = list(c1 = sin(2*pi*grid),
-                      c2 = cos(2*pi*grid),
-                      c3 = sin(2*pi*grid + 1.5*pi))
+    beta = list(b1 = 0.3, b2 = 0.3, b3 = 0.3),
+    centerline = list(c1 = sin(pi*grid) - 4,
+                      c2 = sin(pi*grid),
+                      c3 = sin(pi*grid) + 4)
   ),
   experiment6 = list(
-    dir_name = "experiment6",
-    alpha = list(a1 = 0.2, a2 = 0.4, a3 = 0.6),
-    beta = list(b1 = 0.3, b2 = 0.6, b3 = 0.9),
-    centerline = list(c1 = (grid)^2 - 1,
-                      c2 = (grid)^2,
-                      c3 = (grid)^2 + 1)
+    dir_name = "mini_experiment6",
+    alpha = list(a1 = 0.2, a2 = 0.2, a3 = 0.2),
+    beta = list(b1 = 0.3, b2 = 0.3, b3 = 0.3),
+    centerline = list(c1 = sin(pi*grid) - 5,
+                      c2 = sin(pi*grid),
+                      c3 = sin(pi*grid) + 5)
   )
 )
 
