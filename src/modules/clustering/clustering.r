@@ -439,7 +439,7 @@ results_to_df <- function(results, K) {
         connect = c(kmeans_res$con, pam_res$con, kmeans_man_res$con),
         di = c(kmeans_res$dun, pam_res$dun, kmeans_man_res$dun),
         method = rep(c(
-            "k-means (Euclidean)", "PAM (Euclidean)", "k-means (Manhattan)"
+            "k-means Euclidean", "PAM Euclidean", "k-means Manhattan"
         ), each = length(K))
     )
     return(results_df)

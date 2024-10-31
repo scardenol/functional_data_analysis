@@ -37,7 +37,8 @@ packages <- c(
   "htmltools",
   "roahd",
   "data.table",
-  "rsample"
+  "rsample",
+  "ggpubr" # To combine ggplots
 )
 
 # Load or Install and Load packages
@@ -260,7 +261,58 @@ for (i in seq_along(settings)) {
   ggplot(formatted_data, aes(x=time, y=value, color=curve)) +
     geom_line(aes(group=interaction(time, curve)))
   
-  # General results for hdbscan
+  ### General results for k-means and PAM
+  g_df <- data.frame(method=res_distance$method,
+                     di=res_distance$di,
+                     ci=res_distance$connect,
+                     si=res_distance$avg_sil,
+                     num_clusters=res_distance$k,
+                     iteration=res_distance$iteration)
+  
+  # Optimize each index
+  # Max Dunn Index
+  opt_di <- as.data.table(g_df[,c("method", "di", "num_clusters", "iteration")])
+  opt_di <- opt_di[opt_di[, .I[di == max(di)], by=list(method,iteration)]$V1]
+  opt_di <- as.data.frame(opt_di[order(method)])
+  opt_di$metric <- "Dunn Index (DI)"
+  
+  # Min average Connectivity index
+  opt_ci <- as.data.table(g_df[,c("method", "ci", "num_clusters", "iteration")])
+  opt_ci <- opt_ci[opt_ci[, .I[ci == min(ci)], by=list(method,iteration)]$V1]
+  opt_ci <- as.data.frame(opt_ci[order(method)])
+  opt_ci$metric <- "Connectivity Index (CI)"
+  
+  # Max average Silhouette index
+  opt_si <- as.data.table(g_df[,c("method", "si", "num_clusters", "iteration")])
+  opt_si <- opt_si[opt_si[, .I[si == max(si)], by=list(method,iteration)]$V1]
+  opt_si <- as.data.frame(opt_si[order(method)])
+  opt_si$metric <- "Silhouette Index (SI)"
+  
+  # Distance-based clusters dataframe
+  distance_clusters <- rbind(
+    opt_di[,c("method", "metric", "num_clusters")],
+    opt_ci[,c("method", "metric", "num_clusters")],
+    opt_si[,c("method", "metric", "num_clusters")]
+  )
+  distance_clusters$num_clusters <- as.character(distance_clusters$num_clusters)
+  distance_clusters[distance_clusters$num_clusters >= 4,]$num_clusters <- "4 or more"
+  
+  # k-means Euclidean clusters
+  kme_clusters <- as.data.frame(
+    data.table(distance_clusters)[method %like% "k-means Euclidean", ]
+    )
+  
+  # k-means Manhattan clusters
+  kmm_clusters <- as.data.frame(
+    data.table(distance_clusters)[method %like% "k-means Manhattan", ]
+  )
+  
+  # PAM Euclidean clusters
+  pam_clusters <- as.data.frame(
+    data.table(distance_clusters)[method %like% "PAM Euclidean", ]
+  )
+  
+  ### General results for hdbscan
   gm_df <- select(
     res_minpts,
     "mean_cluster_scores",
@@ -300,19 +352,21 @@ for (i in seq_along(settings)) {
   # Add iteration column
   opt_df_melted$iteration <- rep(opt_df$iteration, 3)
    
-  # Number of clusters data frame
-  clusters_df <- data.frame(
-    metric=c(rep("mean_cluster_score", num_iterations),
-             rep("mean_membership_prob", num_iterations),
-             rep("mean_outlier_scores", num_iterations)),
+  # hdbscan clusters dataframe
+  hdbscan_clusters <- data.frame(
+    metric=c(rep("Stability Score (S)", num_iterations),
+             rep("GLOSH Score (GLOSH)", num_iterations),
+             rep("Membership Prob. Score (MP)", num_iterations)),
     num_clusters=c(opt_cs$num_clusters,
-                   opt_mp$num_clusters,
-                   opt_os$num_clusters)
+                   opt_os$num_clusters,
+                   opt_mp$num_clusters)
     )
   
-  # Boxplot
+  ### Visualization
+  # Plot settings
   theme_set(theme_grey())
   
+  ## Density-based methods
   # Metric values overall
   p_gm <- ggplot(gm_df, aes(y=value, fill=variable)) +
     stat_boxplot(geom ='errorbar', coef=NULL) +
@@ -329,15 +383,39 @@ for (i in seq_along(settings)) {
     labs(fill="metric",
          title="HDBSCAN internal metrics optimal values")
   
-  # Cluster proportion per metric over all iterations
-  p_cp <- ggplot(clusters_df, aes(x=factor(num_clusters), group=metric, fill=metric)) +
+  # Cluster proportion for HDBSCAN
+  p_cp_hdbscan <- ggplot(hdbscan_clusters, aes(x=factor(num_clusters), group=metric, fill=metric)) +
     geom_bar(aes(y = ..prop..),
              position = position_dodge()) +
-    labs(title="HDBSCAN frequency of resulting clusters",
-         x="Number of clusters")
+    labs(title="HDBSCAN",
+         x="Number of clusters", y="Proportion",
+         fill="Internal Validation Metric")
   
-  ################################
+  ## Distance_based methods
   
+  # Cluster proportion for k-means Euclidean
+  p_cp_kme <- ggplot(kme_clusters, aes(x=factor(num_clusters), group=metric, fill=metric)) +
+    geom_bar(aes(y = ..prop..),
+             position = position_dodge()) +
+    labs(title="k-means Euclidean",
+         x="Number of clusters", y="Proportion",
+         fill="Internal Validation Metric")
+  
+  # Cluster proportion for k-means Manhattan
+  p_cp_kmm <- ggplot(kmm_clusters, aes(x=factor(num_clusters), group=metric, fill=metric)) +
+    geom_bar(aes(y = ..prop..),
+             position = position_dodge()) +
+    labs(title="k-means Manhattan",
+         x="Number of clusters", y="Proportion",
+         fill="Internal Validation Metric")
+  
+  # Cluster proportion for PAM
+  p_cp_pam <- ggplot(pam_clusters, aes(x=factor(num_clusters), group=metric, fill=metric)) +
+    geom_bar(aes(y = ..prop..),
+             position = position_dodge()) +
+    labs(title="PAM",
+         x="Number of clusters", y="Proportion",
+         fill="Internal Validation Metric")
   
   p_t <- ggplot(res_distance, aes(x=method, y=time, fill=factor(k))) +
     stat_boxplot(geom ='errorbar', coef=NULL) +
@@ -369,7 +447,16 @@ for (i in seq_along(settings)) {
     facet_wrap(~k) +
     labs(fill="Clusters k",
          title="Dunn index for each method",
-         subtitle="Cluster separation [0,∞], higher is better")
+         subtitle="Cluster separation [0,∞), higher is better")
+  
+  # Combined cluster proportion plot
+  p_cp <- annotate_figure(ggarrange(
+    p_cp_hdbscan, p_cp_kme, p_cp_pam, p_cp_kmm,
+    labels="AUTO"),
+    top=text_grob(paste("Experiment", i),
+                  face = "bold",
+                  size = 18))
+    
   
   #### Export plot results ####
   
@@ -377,6 +464,10 @@ for (i in seq_along(settings)) {
     p_synthetic= p_synthetic,
     p_gm = p_gm,
     p_im = p_im,
+    p_cp_hdbscan = p_cp_hdbscan,
+    p_cp_kme = p_cp_kme,
+    p_cp_kmm = p_cp_kmm,
+    p_cp_pam = p_cp_pam,
     p_cp = p_cp,
     p_t = p_t,
     p_si = p_si,
@@ -385,18 +476,13 @@ for (i in seq_along(settings)) {
   )
   
   # Save the plot_list as an R object
-  #write_object(plot_list, file_name = "plot_list", dir_name = dir_name)
+  write_object(plot_list, file_name = "plot_list", dir_name = dir_name)
+  
+  # Save the entire workspace as an R object
+  save.image(file=paste0(dir_name,"/",dir_name,".RData"))
   
   # Read the plot_list from the R object
   #plot_list <- readRDS(paste(dir_name, "/plot_list.RDS", sep = ""))
-  
-  
-  ### MISSING ###
-  # -[x] generalize prob_stability, outlier_glosh
-  # -[x] Motivation: what is a better hdbscan metric to optimize minPts?
-  # -[x] Experiment: add a mini experiment to answer the previous question
-  # -[x] title: make plots pretty
-  # -[x] export: refactor the code to output the plot results to a dir
   
   time.taken <- difftime(end.time, start.time, units='mins')
   message(paste("Execution time =", time.taken[[1]], "min"))
