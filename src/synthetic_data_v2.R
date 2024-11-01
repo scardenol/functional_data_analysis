@@ -64,8 +64,8 @@ grid <- seq(-1, 1, length.out = P)
 grid2 <- seq(-2, 2, length.out = P)
 grid3 <- seq(-3, 3, length.out = P)
 
-# Iterations (100)
-num_iterations <- 3
+# Iterations
+num_iterations <- 100
 
 # Clustering
 method <- "euclidean"
@@ -81,47 +81,47 @@ settings <- list(
     centerline = list(c1 = sin(pi*grid),
                       c2 = sin(pi*grid),
                       c3 = sin(pi*grid))
-  )#,
-  # experiment2 = list(
-  #   dir_name = "experiment2",
-  #   alpha = list(a1 = 0.2, a2 = 0.2, a3 = 0.2),
-  #   beta = list(b1 = 0.3, b2 = 0.3, b3 = 0.3),
-  #   centerline = list(c1 = sin(pi*grid),
-  #                     c2 = cos(pi*grid),
-  #                     c3 = sin(pi*grid + 1.5*pi))
-  # ),
-  # experiment3 = list(
-  #   dir_name = "experiment3",
-  #   alpha = list(a1 = 0.2, a2 = 0.2, a3 = 0.2),
-  #   beta = list(b1 = 0.3, b2 = 0.3, b3 = 0.3),
-  #   centerline = list(c1 = sin(pi*grid) - 2,
-  #                     c2 = sin(pi*grid),
-  #                     c3 = sin(pi*grid) + 2)
-  # ),
-  # experiment4 = list(
-  #   dir_name = "experiment4",
-  #   alpha = list(a1 = 0.2, a2 = 0.4, a3 = 0.6),
-  #   beta = list(b1 = 0.3, b2 = 0.3, b3 = 0.3),
-  #   centerline = list(c1 = sin(pi*grid),
-  #                     c2 = cos(pi*grid),
-  #                     c3 = sin(pi*grid + 1.5*pi))
-  # ),
-  # experiment5 = list(
-  #   dir_name = "experiment5",
-  #   alpha = list(a1 = 0.2, a2 = 0.2, a3 = 0.2),
-  #   beta = list(b1 = 0.3, b2 = 0.6, b3 = 0.9),
-  #   centerline = list(c1 = sin(2*pi*grid),
-  #                     c2 = cos(2*pi*grid),
-  #                     c3 = sin(2*pi*grid + 1.5*pi))
-  # ),
-  # experiment6 = list(
-  #   dir_name = "experiment6",
-  #   alpha = list(a1 = 0.2, a2 = 0.4, a3 = 0.6),
-  #   beta = list(b1 = 0.3, b2 = 0.6, b3 = 0.9),
-  #   centerline = list(c1 = (grid)^2 - 1,
-  #                     c2 = (grid)^2,
-  #                     c3 = (grid)^2 + 1)
-  # )
+  ),
+   experiment2 = list(
+     dir_name = "experiment2",
+     alpha = list(a1 = 0.2, a2 = 0.2, a3 = 0.2),
+     beta = list(b1 = 0.3, b2 = 0.3, b3 = 0.3),
+     centerline = list(c1 = sin(pi*grid),
+                       c2 = cos(pi*grid),
+                       c3 = sin(pi*grid + 1.5*pi))
+   ),
+   experiment3 = list(
+     dir_name = "experiment3",
+     alpha = list(a1 = 0.2, a2 = 0.2, a3 = 0.2),
+     beta = list(b1 = 0.3, b2 = 0.3, b3 = 0.3),
+     centerline = list(c1 = sin(pi*grid) - 2,
+                       c2 = sin(pi*grid),
+                       c3 = sin(pi*grid) + 2)
+   ),
+   experiment4 = list(
+     dir_name = "experiment4",
+     alpha = list(a1 = 0.2, a2 = 0.4, a3 = 0.6),
+     beta = list(b1 = 0.3, b2 = 0.3, b3 = 0.3),
+     centerline = list(c1 = sin(pi*grid),
+                       c2 = cos(pi*grid),
+                       c3 = sin(pi*grid + 1.5*pi))
+   ),
+   experiment5 = list(
+     dir_name = "experiment5",
+     alpha = list(a1 = 0.2, a2 = 0.2, a3 = 0.2),
+     beta = list(b1 = 0.3, b2 = 0.6, b3 = 0.9),
+     centerline = list(c1 = sin(2*pi*grid),
+                       c2 = cos(2*pi*grid),
+                       c3 = sin(2*pi*grid + 1.5*pi))
+   ),
+   experiment6 = list(
+     dir_name = "experiment6",
+     alpha = list(a1 = 0.2, a2 = 0.4, a3 = 0.6),
+     beta = list(b1 = 0.3, b2 = 0.6, b3 = 0.9),
+     centerline = list(c1 = (grid)^2 - 1,
+                       c2 = (grid)^2,
+                       c3 = (grid)^2 + 1)
+   )
 )
 
 # Random seed
