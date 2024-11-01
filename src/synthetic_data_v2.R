@@ -361,6 +361,7 @@ for (i in seq_along(settings)) {
                    opt_os$num_clusters,
                    opt_mp$num_clusters)
     )
+  hdbscan_clusters[hdbscan_clusters$num_clusters >= 4,]$num_clusters <- "4 or more"
   
   ### Visualization
   # Plot settings
