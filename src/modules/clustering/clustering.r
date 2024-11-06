@@ -138,21 +138,21 @@ pam_fd <- function(fun_data, k, metric = "euclidean", initial_medoids = "pp") {
 }
 
 # Create an auxiliary function to call the hdbscan function
-hdbscan_fd <- function(fun_data, method=NULL, minPts = NULL, gen_hdbscan_tree = FALSE, gen_simplified_tree = FALSE, verbose = FALSE) {
+hdbscan_fd <- function(fun_data, distance=NULL, minPts = NULL, gen_hdbscan_tree = FALSE, gen_simplified_tree = FALSE, verbose = FALSE) {
     # If fun_data is empty return an error
     if (is.null(fun_data)) stop("fun_data is empty")
     # If minPts is NULL, set it to the number of columns of the data + 1
     if (is.null(minPts)) {
         minPts <- ncol(fun_data$data) + 1
     }
-    # If method is not null check that it is any of c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")
-    if (!is.null(method)) {
-        if (!method %in% c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")) {
-            stop("method is not any of c('euclidean', 'maximum', 'manhattan', 'canberra', 'binary', 'minkowski')")
+    # If distance is not null check that it is any of c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")
+    if (!is.null(distance)) {
+        if (!distance %in% c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")) {
+            stop("distance is not any of c('euclidean', 'maximum', 'manhattan', 'canberra', 'binary', 'minkowski')")
         }
     }
-    # If method is null call hdbscan with default parameters
-    if (is.null(method)) {
+    # If distance is null call hdbscan with default parameters
+    if (is.null(distance)) {
     results <- hdbscan(fun_data$data,
         minPts = minPts,
         gen_hdbscan_tree = gen_hdbscan_tree,
@@ -160,8 +160,8 @@ hdbscan_fd <- function(fun_data, method=NULL, minPts = NULL, gen_hdbscan_tree = 
         verbose = verbose
     )
     } else {
-        # Precompute the distance matrix with dist and the passed method
-        dist_mat <- dist(fun_data$data, method = method)
+        # Precompute the distance matrix with dist and the passed distance metric
+        dist_mat <- dist(fun_data$data, method = distance)
         # Call hdbscan with the precomputed distance matrix
         results <- hdbscan(dist_mat,
             minPts = minPts,
@@ -177,17 +177,17 @@ hdbscan_fd <- function(fun_data, method=NULL, minPts = NULL, gen_hdbscan_tree = 
 # Function that runs the hdbscan_fd function for multiple values of minPts, takes the cluster_scores
 # results, computes the mean of the cluster_scores and returns a data frame with two columns: minPts
 # and mean_cluster_scores.
-hdbscan_multiple_minPts <- function(fun_data, minPts = 2:10, method = NULL) {
+hdbscan_multiple_minPts <- function(fun_data, minPts = 2:10, distance = NULL) {
     # Check if fun_data is a functional data object
     if (!is.fdata(fun_data)) stop("fun_data is not functional data")
     # Check if minPts is a numerical vector
     if (!is.numeric(minPts)) stop("minPts is not numerical")
     # Check if minPts is a vector with values greater than 1
     if (any(minPts < 2)) stop("minPts cant have values less than 2")
-    # If method is not null, check that it is any of c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")
-    if (!is.null(method)) {
-        if (!method %in% c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")) {
-            stop("method is not any of c('euclidean', 'maximum', 'manhattan', 'canberra', 'binary', 'minkowski')")
+    # If distance is not null, check that it is any of c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")
+    if (!is.null(distance)) {
+        if (!distance %in% c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")) {
+            stop("distance is not any of c('euclidean', 'maximum', 'manhattan', 'canberra', 'binary', 'minkowski')")
         }
     }
 
@@ -203,7 +203,7 @@ hdbscan_multiple_minPts <- function(fun_data, minPts = 2:10, method = NULL) {
     # Iterate over multiple values of minPts
     for (minPts in minPts) {
         # Run hdbscan
-        hdbscan_res <- hdbscan_fd(fun_data, minPts = minPts, method = method)
+        hdbscan_res <- hdbscan_fd(fun_data, minPts = minPts, distance = distance)
         # Extract cluster_scores, membership_prob, outlier_scores from the results
         cluster_scores <- hdbscan_res$cluster_scores
         membership_prob <- hdbscan_res$membership_prob

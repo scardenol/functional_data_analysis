@@ -68,7 +68,7 @@ grid3 <- seq(-3, 3, length.out = P)
 num_iterations <- 100
 
 # Clustering
-method <- "euclidean"
+distance <- "euclidean"
 minpts_search <- 2:100
 K <- 2:4 # number of clusters
 
@@ -198,13 +198,13 @@ for (i in seq_along(settings)) {
       # Experimentation
       message("Running density-based algorithms...")
       # 0. Run hdbscan_multiple_minPts to find the optimal minPts parameter
-      opt_minpts_df <- hdbscan_multiple_minPts(fd, minPts = minpts_search, method = method)
+      opt_minpts_df <- hdbscan_multiple_minPts(fd, minPts = minpts_search, distance = distance)
       # Compute the optimal minPts parameter
       opt_idx <- which.max(opt_minpts_df$mean_cluster_scores)
       opt_minpts <- opt_minpts_df$minPts[opt_idx]
       
       # 1. Density-based clustering with HDBSCAN
-      hdbscan_res <- hdbscan_fd(fd, minPts = opt_minpts, method = method)
+      hdbscan_res <- hdbscan_fd(fd, minPts = opt_minpts, distance = distance)
       
       message("Running distance-based algorithms...")
       # 2. Distance-based clustering with: custom pam, k-means (Manhattan), k-means (Euclidean)

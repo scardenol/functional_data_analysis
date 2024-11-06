@@ -47,6 +47,8 @@ loaded_packages <- data.frame(
 )
 loaded_packages
 
+#### Preprocessing ####
+
 # List all xlsx input files to be read
 files <- c(
   "id_service_3144.xlsx",
@@ -154,24 +156,35 @@ filter_results <- filter_data(users_fdata_scaled$data, deepest_bands, freq = 0.7
 users_fdata_filtered$data <- filter_results$filtered_data # filtered data
 filter_idx <- filter_results$curves_idx # original index of the filtered curves
 
-# Plot filtered users by user id
-users_filtered_lf <- format_filtered_long_data(users_scaled_lf, group_by = users_id, filter_by = filter_idx)
-p_filtered <- plot_fdata(users_filtered_lf, plot_labels = plot_labels, group_by = users_id, legend_title = "User id", filtered_data = TRUE)
+# Plot filtered users by users_id (to preserve the original ID) or users_label (to use 1-10 IDs) 
+users_filtered_lf <- format_filtered_long_data(users_scaled_lf, group_by = users_label, filter_by = filter_idx)
+p_filtered <- plot_fdata(users_filtered_lf,
+                         plot_labels = plot_labels,
+                         group_by = users_label,
+                         legend_title = "Company",
+                         filtered_data = TRUE)
 
+#### Experimentation ####
+distance <- "euclidean"
 
-# Experimentation
-method <- "euclidean"
 # 0. Run hdbscan_multiple_minPts to find the optimal minPts parameter
-opt_minpts_df <- hdbscan_multiple_minPts(users_fdata_filtered, minPts = 2:100, method = method)
-# Compute the optimal minPts parameter
+
+# Iterate over multiple values of minPts (2-100) and compute each internal validation metric
+opt_minpts_df <- hdbscan_multiple_minPts(users_fdata_filtered, minPts = 2:100, distance = distance)
+
+# Compute the optimal minPts parameter based on Stability Score
 opt_idx <- which.max(opt_minpts_df$mean_cluster_scores)
 opt_minpts <- opt_minpts_df$minPts[opt_idx]
 
 # 1. Density-based clustering with HDBSCAN
-hdbscan_res <- hdbscan_fd(users_fdata_filtered, minPts = opt_minpts, method = method)
+hdbscan_res <- hdbscan_fd(users_fdata_filtered,
+                          minPts = opt_minpts,
+                          distance = distance)
 
 # Plot results
-p_hdbscan <- plot_hdbscan_results(users_filtered_lf, hdbscan_res, opt_minpts_df)
+p_hdbscan <- plot_hdbscan_results(users_filtered_lf,
+                                  hdbscan_res,
+                                  opt_minpts_df)
 
 # Visualize clusters on unscaled data
 p_hdbscan_raw <- plot_fdata(format_filtered_long_data(users_lf), plot_labels = plot_labels, group_by = hdbscan_res$cluster, legend_title = "Cluster")
