@@ -34,7 +34,9 @@ packages <- c(
   "latex2exp",
   "reshape2",
   "rgl",
-  "htmltools"
+  "htmltools",
+  "ggpubr", # To combine ggplots
+  "data.table"
 )
 
 # Load or Install and Load packages
@@ -167,37 +169,154 @@ p_filtered <- plot_fdata(users_filtered_lf,
 #### Experimentation ####
 distance <- "euclidean"
 
-# 0. Run hdbscan_multiple_minPts to find the optimal minPts parameter
+## 0. Run hdbscan_multiple_minPts to find the optimal minPts parameter
 
 # Iterate over multiple values of minPts (2-100) and compute each internal validation metric
 opt_minpts_df <- hdbscan_multiple_minPts(users_fdata_filtered, minPts = 2:100, distance = distance)
 
-# Compute the optimal minPts parameter based on Stability Score
-opt_idx <- which.max(opt_minpts_df$mean_cluster_scores)
-opt_minpts <- opt_minpts_df$minPts[opt_idx]
+## 1. Density-based clustering with HDBSCAN
 
-# 1. Density-based clustering with HDBSCAN
-hdbscan_res <- hdbscan_fd(users_fdata_filtered,
-                          minPts = opt_minpts,
+## Min GLOSH Score
+# Find the minPts value that optimizes GLOSH Score
+opt_idx_glosh <- which.min(opt_minpts_df$mean_outlier_scores)
+opt_minpts_glosh <- opt_minpts_df$minPts[opt_idx_glosh]
+opt_glosh <- opt_minpts_df$mean_outlier_scores[opt_idx_glosh]
+# Run HDBSCAN with the found value
+hdbscan_glosh <- hdbscan_fd(users_fdata_filtered,
+                          minPts = opt_minpts_glosh,
                           distance = distance)
-
 # Plot results
-p_hdbscan <- plot_hdbscan_results(users_filtered_lf,
-                                  hdbscan_res,
-                                  opt_minpts_df)
+p_hdbscan_glosh <- plot_hdbscan_results(users_filtered_lf,
+                                        hdbscan_glosh,
+                                        opt_minpts_df,
+                                        opt_idx_glosh,
+                                        opt_minpts_glosh,
+                                        opt_glosh,
+                                        metric="mean_outlier_scores",
+                                        metric_label = "GLOSH Score",
+                                        cluster_plot_labels = list(
+                                          x = "Hour",
+                                          y = "Active energy (kWH)",
+                                          title = "GLOSH Score"
+                                          ))
+
+## Max Membership Probability Score
+# Find the minPts value that optimizes MP Score
+opt_idx_mp <- which.max(opt_minpts_df$mean_membership_prob)
+opt_minpts_mp <- opt_minpts_df$minPts[opt_idx_mp]
+opt_mp <- opt_minpts_df$mean_membership_prob[opt_idx_mp]
+# Run HDBSCAN with the found value
+hdbscan_mp <- hdbscan_fd(users_fdata_filtered,
+                            minPts = opt_minpts_mp,
+                            distance = distance)
+# Plot results
+p_hdbscan_mp <- plot_hdbscan_results(users_filtered_lf,
+                                     hdbscan_mp,
+                                     opt_minpts_df,
+                                     opt_idx_mp,
+                                     opt_minpts_mp,
+                                     opt_mp,
+                                     metric="mean_membership_prob",
+                                     metric_label = "Membership Prob. Score",
+                                     cluster_plot_labels = list(
+                                       x = "Hour",
+                                       y = "Active energy (kWH)",
+                                       title = "Membership Prob. Score"
+                                     ))
+
+## Max Stability Score
+# Find the minPts value that optimizes Stability Score
+opt_idx_s <- which.max(opt_minpts_df$mean_cluster_scores)
+opt_minpts_s <- opt_minpts_df$minPts[opt_idx_s]
+opt_s <- opt_minpts_df$mean_cluster_scores[opt_idx_s]
+# Run HDBSCAN with the found value
+hdbscan_s <- hdbscan_fd(users_fdata_filtered,
+                         minPts = opt_minpts_s,
+                         distance = distance)
+# Plot results
+p_hdbscan_s <- plot_hdbscan_results(users_filtered_lf,
+                                    hdbscan_s,
+                                    opt_minpts_df,
+                                    opt_idx_s,
+                                    opt_minpts_s,
+                                    opt_s,
+                                    metric="mean_cluster_scores",
+                                    metric_label = "Stability Score",
+                                    cluster_plot_labels = list(
+                                      x = "Hour",
+                                      y = "Active energy (kWH)",
+                                      title = "Stability Score"
+                                    ))
+
+# Combined plots
+p_opt_minpts <- annotate_figure(ggarrange(
+  ncol=3, nrow=1,
+  p_hdbscan_glosh$p_opt_minpts, p_hdbscan_mp$p_opt_minpts, p_hdbscan_s$p_opt_minpts,
+  labels="AUTO"),
+  top=text_grob("minPts optimization",
+                face = "bold",
+                size = 18))
+
+# p_density_clusters <- annotate_figure(ggarrange(
+#   ncol=3, nrow=1,
+#   p_hdbscan_glosh$p_hdbscan, p_hdbscan_mp$p_hdbscan, p_hdbscan_s$p_hdbscan,
+#   labels="AUTO"),
+#   top=text_grob("Resulting clusters",
+#                 face = "bold",
+#                 size = 18))
+
+# Tabular summary of the results
+density_results <- list(
+  metrics = data.frame(Method="HDBSCAN", GLOSH=opt_glosh, MP=opt_mp, S=opt_s),
+  clusters = data.frame(Method="HDBSCAN", GLOSH=max(hdbscan_glosh$cluster),
+                        MP=max(hdbscan_mp$cluster), S=max(hdbscan_s$cluster))
+)
+density_results
+
 
 # Visualize clusters on unscaled data
-p_hdbscan_raw <- plot_fdata(format_filtered_long_data(users_lf), plot_labels = plot_labels, group_by = hdbscan_res$cluster, legend_title = "Cluster")
+# p_hdbscan_raw <- plot_fdata(format_filtered_long_data(users_lf), plot_labels = plot_labels,
+#                             group_by = hdbscan_glosh$cluster, legend_title = "Cluster")
 
-# 2. Distance-based clustering with: custom pam, k-means (Manhattan), k-means (Euclidean)
-k_hdbscan <- length(unique(hdbscan_res$cluster)) # number of clusters from hdbscan
+## 2. Distance-based clustering with functional pam, k-means (Manhattan), and k-means (Euclidean)
+
+# Iterate over multiple value of clusters k
+k_hdbscan <- 3 # number of clusters from hdbscan
 K <- 2:(2 * k_hdbscan) # number of clusters to try
 distance_res <- distance_based_clustering(users_fdata_filtered, K = K, verbose = "minimal")
-# Extract results for pam
-pam_res <- distance_res$pam_res
+
+# # Extract results for pam
+# pam_res <- distance_res$pam_res
 
 # Format results into a data frame
 results_df <- results_to_df(distance_res, K = K)
+
+# Optimize each internal validation index
+# Min average Connectivity Index
+opt_ci <- as.data.table(results_df[,c("method", "connect", "k")])
+names(opt_ci)[2] <- "ci"
+opt_ci <- opt_ci[opt_ci[, .I[ci == max(ci)], by=list(method)]$V1]
+opt_ci <- as.data.frame(opt_ci[order(method)])
+
+# Max average Dunn Index
+opt_di <- as.data.table(results_df[,c("method", "di", "k")])
+opt_di <- opt_di[opt_di[, .I[di == max(di)], by=list(method)]$V1]
+opt_di <- as.data.frame(opt_di[order(method)])
+
+# Max average Silhouette Index
+opt_si <- as.data.table(results_df[,c("method", "avg_sil", "k")])
+names(opt_si)[2] <- "si"
+opt_si <- opt_si[opt_si[, .I[si == max(si)], by=list(method)]$V1]
+opt_si <- as.data.frame(opt_si[order(method)])
+
+# Tabular summary of the results
+distance_clusters <- cbind(opt_ci[,c("method", "k")], di=opt_di$k, si=opt_si$k)
+names(distance_clusters)[2] <- "ci"
+distance_results <- list(
+  metrics = cbind(opt_ci[,c("method", "ci")], di=opt_di$di, si=opt_si$si),
+  clusters = distance_clusters
+)
+distance_results
 
 # Visualize results: time, connectivity, dunn and silhouette
 p_time <- plot_distance_results(results_df, result_type = "time")
@@ -210,78 +329,110 @@ p_silhouette_kmeans <- distance_res$kmeans_res$diagram
 p_silhouette_pam <- distance_res$pam_res$diagram
 p_silhouette_kmeans_man <- distance_res$kmeans_man_res$diagram
 
+## Resulting clusters
+
+# K-means Euclidean
+p_kme <- plot_fdata(
+  users_filtered_lf, plot_labels = list(
+    x = "Hour",
+    y = "Active energy (kWH)",
+    title = "k-means Euclidean (k=3, average Connectivity Index)"
+  ),
+  group_by = distance_res$kmeans_res$output[[2]]$cluster,
+  legend_title = "Cluster")
+
+# PAM
+p_pam <- plot_fdata(
+  users_filtered_lf, plot_labels = list(
+    x = "Hour",
+    y = "Active energy (kWH)",
+    title = "PAM Euclidean (k=3, average Connectivity Index)"
+  ),
+  group_by = distance_res$pam_res$output[[2]]$cluster,
+  legend_title = "Cluster")
+
+# K-means Manhattan
+p_kmm <- plot_fdata(
+  users_filtered_lf, plot_labels = list(
+    x = "Hour",
+    y = "Active energy (kWH)",
+    title = "k-means Manhattan (k=3, average Connectivity Index)"
+  ),
+  group_by = distance_res$kmeans_man_res$output[[2]]$cluster,
+  legend_title = "Cluster")
+
 # Conclude the optimal number of clusters from hdbscan results
-k <- length(unique(hdbscan_res$cluster))
+# k <- length(unique(hdbscan_res$cluster))
 
-# Compute the norm indicators for the hdbscan method
-norm_indicators_hdbscan <- plot_norm_indicators(users_fdata_filtered,
-  method = "hdbscan",
-  cluster = hdbscan_res$cluster,
-  title = plot_labels$title,
-  plot = FALSE
-)
-# Extract results for the hdbscan method
-I_hdbscan <- norm_indicators_hdbscan$I # matrix with data in the indicators space
-df_hdbscan <- norm_indicators_hdbscan$df # data frame with the indicators and their cluster
-p_hdbscan_norm <- norm_indicators_hdbscan$sp # plot of the indicators space
+# # Compute the norm indicators for the hdbscan method
+# norm_indicators_hdbscan <- plot_norm_indicators(users_fdata_filtered,
+#   method = "hdbscan",
+#   cluster = hdbscan_res$cluster,
+#   title = plot_labels$title,
+#   plot = FALSE
+# )
+# # Extract results for the hdbscan method
+# I_hdbscan <- norm_indicators_hdbscan$I # matrix with data in the indicators space
+# df_hdbscan <- norm_indicators_hdbscan$df # data frame with the indicators and their cluster
+# p_hdbscan_norm <- norm_indicators_hdbscan$sp # plot of the indicators space
+# 
+# # Compute the norm indicators for the pam method
+# norm_indicators_pam <- plot_norm_indicators(users_fdata_filtered,
+#   method = "pam",
+#   cluster = pam_res$output[[k - 1]]$cluster,
+#   title = plot_labels$title,
+#   plot = FALSE
+# )
+# 
+# # Extract results for the pam method
+# I_pam <- norm_indicators_pam$I # matrix with data in the indicators space
+# df_pam <- norm_indicators_pam$df # data frame with the indicators and their cluster
+# p_pam_norm <- norm_indicators_pam$sp # plot of the indicators space
 
-# Compute the norm indicators for the pam method
-norm_indicators_pam <- plot_norm_indicators(users_fdata_filtered,
-  method = "pam",
-  cluster = pam_res$output[[k - 1]]$cluster,
-  title = plot_labels$title,
-  plot = FALSE
-)
-
-# Extract results for the pam method
-I_pam <- norm_indicators_pam$I # matrix with data in the indicators space
-df_pam <- norm_indicators_pam$df # data frame with the indicators and their cluster
-p_pam_norm <- norm_indicators_pam$sp # plot of the indicators space
-
-# Filtered users_id
-users_id_filtered <- users_id[filter_idx, , drop = FALSE]
-
-# Visualize users versus hdbscan clusters
-plot_res <- plot_users_vs_clusters(
-  users = users_id_filtered,
-  density_clusters = hdbscan_res$cluster,
-  distance_clusters = pam_res$output[[k - 1]]$cluster,
-  methods = c("hdbscan", "pam")
-)
-
-# Extract results
-p_users_vs_hdbscan <- plot_res$p_users_vs_density
-p_users_vs_pam <- plot_res$p_users_vs_distance
+# # Filtered users_id
+# users_id_filtered <- users_id[filter_idx, , drop = FALSE]
+# 
+# # Visualize users versus hdbscan clusters
+# plot_res <- plot_users_vs_clusters(
+#   users = users_id_filtered,
+#   density_clusters = hdbscan_res$cluster,
+#   distance_clusters = pam_res$output[[k - 1]]$cluster,
+#   methods = c("hdbscan", "pam")
+# )
+# 
+# # Extract results
+# p_users_vs_hdbscan <- plot_res$p_users_vs_density
+# p_users_vs_pam <- plot_res$p_users_vs_distance
 
 # Create a list with all the plots (variables starting with p_) and name them with the variable name
-plot_list <- list(
-  p_raw = p_raw,
-  p_scaled = p_scaled,
-  p_deepest_bands = p_deepest_bands,
-  p_filtered = p_filtered,
-  p_hdbscan = p_hdbscan,
-  p_hdbscan_raw = p_hdbscan_raw,
-  p_time = p_time,
-  p_connectivity = p_connectivity,
-  p_dunn = p_dunn,
-  p_silhouette = p_silhouette,
-  p_silhouette_kmeans = p_silhouette_kmeans,
-  p_silhouette_pam = p_silhouette_pam,
-  p_silhouette_kmeans_man = p_silhouette_kmeans_man,
-  p_hdbscan_norm = p_hdbscan_norm,
-  p_pam_norm = p_pam_norm,
-  p_users_vs_hdbscan = p_users_vs_hdbscan,
-  p_users_vs_pam = p_users_vs_pam
-)
-
-# Set directory
-dir_name <- "images"
-
-# Save the plot_list as an R object
-write_object(plot_list, file_name = "plot_list", dir_name = dir_name)
-
-# Read the plot_list from the R object
-plot_list <- readRDS(paste(dir_name, "/plot_list.RDS", sep = ""))
-
-# Save each plot from plot_list as an interactive html file
-write_html_plots(plot_list, dir_name = dir_name, width = 1300, height = 600)
+# plot_list <- list(
+#   p_raw = p_raw,
+#   p_scaled = p_scaled,
+#   p_deepest_bands = p_deepest_bands,
+#   p_filtered = p_filtered,
+#   p_hdbscan = p_hdbscan,
+#   p_hdbscan_raw = p_hdbscan_raw,
+#   p_time = p_time,
+#   p_connectivity = p_connectivity,
+#   p_dunn = p_dunn,
+#   p_silhouette = p_silhouette,
+#   p_silhouette_kmeans = p_silhouette_kmeans,
+#   p_silhouette_pam = p_silhouette_pam,
+#   p_silhouette_kmeans_man = p_silhouette_kmeans_man,
+#   p_hdbscan_norm = p_hdbscan_norm,
+#   p_pam_norm = p_pam_norm,
+#   p_users_vs_hdbscan = p_users_vs_hdbscan,
+#   p_users_vs_pam = p_users_vs_pam
+# )
+# 
+# # Set directory
+# dir_name <- "images"
+# 
+# # Save the plot_list as an R object
+# write_object(plot_list, file_name = "plot_list", dir_name = dir_name)
+# 
+# # Read the plot_list from the R object
+# plot_list <- readRDS(paste(dir_name, "/plot_list.RDS", sep = ""))
+# 
+# # Save each plot from plot_list as an interactive html file
+# write_html_plots(plot_list, dir_name = dir_name, width = 1300, height = 600)

@@ -85,20 +85,18 @@ plot_deepest_bands <- function(data_lf, deepest_bands, plot_labels = NULL, color
 }
 
 # Auxiliary function to plot hdbscan results
-plot_hdbscan_results <- function(data_lf, hdbscan_res, opt_minpts_df, metric="mean_cluster_scores", metric_label = "Stability Score") {
+plot_hdbscan_results <- function(data_lf, hdbscan_res, opt_minpts_df, opt_idx, opt_minpts, opt_metric,
+                                 metric="mean_cluster_scores", metric_label = "Stability Score",
+                                 cluster_plot_labels = list(x="Hour", y="Active energy (kWh)", title="")) {
+  
     # Plot the results of hdbscan
-    p_hdbscan <- plot_fdata(data_lf, plot_labels = plot_labels, group_by = hdbscan_res$cluster, legend_title = "Cluster")
-
-    # Store both the optimal minPts and its mean cluster score
-    opt_idx <- which.max(opt_minpts_df[[metric]])
-    opt_minpts <- opt_minpts_df$minPts[opt_idx]
-    opt_minpts_metric <- opt_minpts_df[[metric]][opt_idx]
+    p_hdbscan <- plot_fdata(data_lf, plot_labels = cluster_plot_labels, group_by = hdbscan_res$cluster, legend_title = "Cluster")
 
     # Plot results as a line plot. Highlight the optimal minPts by changing the color of the point. Add a vertical dashed line as well.
-    p_opt_minpts <- ggplot(opt_minpts_df, aes(x = minPts, y = mean_cluster_scores)) +
+    p_opt_minpts <- ggplot(opt_minpts_df, aes(x = minPts, y = .data[[metric]])) +
         geom_line() +
         geom_point() +
-        geom_point(aes(x = opt_minpts, y = opt_minpts_metric), color = "red") +
+        geom_point(aes(x = opt_minpts, y = opt_metric), color = "red") +
         geom_vline(xintercept = opt_minpts, linetype = "dashed", color = "red") +
         labs(x = "minPts", y = metric_label, title = paste(metric_label, "vs minPts"))
 

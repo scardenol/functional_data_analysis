@@ -270,7 +270,7 @@ for (i in seq_along(settings)) {
                      iteration=res_distance$iteration)
   
   # Optimize each index
-  # Max Dunn Index
+  # Max average Dunn Index
   opt_di <- as.data.table(g_df[,c("method", "di", "num_clusters", "iteration")])
   opt_di <- opt_di[opt_di[, .I[di == max(di)], by=list(method,iteration)]$V1]
   opt_di <- as.data.frame(opt_di[order(method)])
